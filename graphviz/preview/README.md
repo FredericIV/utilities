@@ -5,6 +5,7 @@ Preview a graphviz file you're working on by rendering an automatically updating
 ## Dependencies
 - Python3
 - Flask
+- Waitress
 - Graphviz
 
 ## Usage
@@ -13,7 +14,7 @@ To execute, run:
 $ python3 ./app.py
 ```
 
-To view, access the following in your browser, where type is the graphviz format (eg. svg or png) and file is the graphviz file name in the same or deeper directory:
+To view, access the following in your browser, where engine is one of dot, neato, twopi, circo, fdp, sfdp, patchwork, or osage, type is the graphviz format (eg. svg or png) and file is the graphviz file name in the same or deeper directory:
 ```
-http://localhost:5000/TYPE/FILE
+http://localhost:8080/ENGINE/TYPE/FILE
 ```

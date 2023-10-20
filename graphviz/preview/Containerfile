@@ -1,0 +1,13 @@
+FROM docker.io/python:alpine
+
+WORKDIR /usr/src/app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt && apk add --no-cache graphviz 
+
+COPY app.py .
+
+EXPOSE 8080/tcp
+ENV GRAPHVIZ_DATADIR=/data
+VOLUME /data
+CMD [ "python", "./app.py" ]
+

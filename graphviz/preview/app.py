@@ -10,12 +10,12 @@ import gzip
 app = Flask(__name__)
 datadir = os.environ.get('GRAPHVIZ_DATADIR', './')
 page_template = '''<!doctype html>
-<html style=\"height: 100%;\">
+<html>
     <head>
         <title>Graphviz</title>
         <meta http-equiv=\"refresh\" content=\"120\"/><meta http-equiv=\"cache-control\" content=\"no-cache\"/>
     </head>
-    <body style=\"min-height: 90%; height: 98%;\">
+    <body>
         {{embed|safe}}
         {{errortext|safe}}
     </body>
@@ -75,7 +75,7 @@ def getMemberPath(engine, imgtype, name):
                        )
             else:
                 image = base64.b64encode(dot.stdout).decode('utf-8')
-                embed = f"<object style=\"min-height: 100%; width: 100%\" data=\"data:application/pdf;base64,{image}\" type=\"{mimetypes.guess_type('test.'+imgtype, strict=False)[0]}\"><p>Unable to display PDF file. <a href=\"data:{mimetypes.guess_type('test.'+imgtype, strict=False)[0]};base64,{image}\">Download</a> instead.</p></object>"
+                embed = f"<object data=\"data:application/pdf;base64,{image}\" type=\"{mimetypes.guess_type('test.'+imgtype, strict=False)[0]}\"><p>Unable to display PDF file. <a href=\"data:{mimetypes.guess_type('test.'+imgtype, strict=False)[0]};base64,{image}\">Download</a> instead.</p></object>"
         case "svg":
             if request.args.get('embed', default="true") == "false":
                 svgstring = dot.stdout
@@ -96,7 +96,7 @@ def getMemberPath(engine, imgtype, name):
                     )
             else:
                 image = base64.b64encode(svgstring).decode('utf-8')
-                embed = f"<img style=\"height: 100%; width: 100%; object-fit: contain\" src=\"data:image/svg+xml;base64,{image}\"/>"
+                embed = f"<img src=\"data:image/svg+xml;base64,{image}\"/>"
         case "dot":
             if request.args.get('raw') == "true":
                 return app.response_class(
@@ -124,7 +124,7 @@ def getMemberPath(engine, imgtype, name):
                     )
             else:
                 image = base64.b64encode(dot.stdout).decode('utf-8')
-                embed = f"<img style=\"height: 100%; width: 100%; object-fit: contain\" src=\"data:{mimetypes.guess_type('test.'+imgtype, strict=False)[0]};base64,{image}\"/>"
+                embed = f"<img src=\"data:{mimetypes.guess_type('test.'+imgtype, strict=False)[0]};base64,{image}\"/>"
     return render_template_string(page_template, embed=embed, errortext=errortext)
 
 if __name__ == "__main__":

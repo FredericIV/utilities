@@ -1,14 +1,15 @@
-FROM docker.io/python:alpine
+FROM docker.io/python:slim
 
 WORKDIR /usr/src/app
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt && apk add --no-cache graphviz 
+ENV DEBIAN_FRONTEND=noninteractive
+RUN pip install --no-cache-dir -r requirements.txt && apt update && apt install -y graphviz && rm -rf /var/lib/apt/lists/*
 
 COPY app.py .
 
 EXPOSE 8080/tcp
 ENV GRAPHVIZ_DATADIR=/data
-ENV GRAPHVIZ_HOST="127.0.0.1"
+ENV GRAPHVIZ_HOST="0.0.0.0"
 ENV GRAPHVIZ_PORT="8080"
 VOLUME $GRAPHVIZ_DATADIR
 CMD [ "python", "./app.py" ]

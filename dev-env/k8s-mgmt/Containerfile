@@ -1,10 +1,12 @@
 ARG ALPINE_VER=3.18
 FROM docker.io/alpine:${ALPINE_VER}
+
 RUN echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories \
     && apk --no-cache add nano wget git bash bash-completion curl tailscale@edge \
        kubectl@edge kubectl-bash-completion@edge  \
        helm@edge helm-bash-completion@edge \
        kustomize@edge kustomize-bash-completion@edge
+
 RUN ( \
         set -x; cd "$(mktemp -d)" && \
         OS="$(uname | tr '[:upper:]' '[:lower:]')" && \

@@ -1,0 +1,53 @@
+name: build-push-containers
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '**/Containerfile'
+      - '**/Dockerfile'
+
+jobs:
+  id-containers:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v4
+    - id: set-matrix
+      run: |
+        python -c 'import os
+        import json
+        def find_all(name, path):
+            result = []
+            for root, dirs, files in os.walk(path):
+                if name in files:
+                    result.append({"path":os.path.join(root, name),"name":os.path.basename(root)})
+            return result
+        print("matrix={\"include\":"+json.dumps(find_all("Containerfile","."))+"}")' >> $GITHUB_OUTPUT
+
+  build-push-containers:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.id-containers.outputs.matrix)}}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: build
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: utilities/${{ matrix.name }}
+          tags: ${{ github.sha }}
+          containerfiles: |
+            ${{ matrix.path }}
+
+      - name: push
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build.outputs.image }}
+          tags: ${{ steps.build.outputs.tags }}
+          registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
+          username: ${{ secrets.GITEA_USERNAME }}
+          password: ${{ secrets.GITEA_TOKEN }}

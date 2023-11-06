@@ -1,0 +1,33 @@
+ARG ALPINE_VER=3.18
+FROM docker.io/alpine:${ALPINE_VER}
+RUN echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories \
+    && apk --no-cache add nano wget git bash bash-completion curl tailscale@edge \
+       kubectl@edge kubectl-bash-completion@edge  \
+       helm@edge helm-bash-completion@edge \
+       kustomize@edge kustomize-bash-completion@edge
+RUN ( \
+        set -x; cd "$(mktemp -d)" && \
+        OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
+        ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" && \
+        KREW="krew-${OS}_${ARCH}" && \
+        curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" && \
+        tar zxvf "${KREW}.tar.gz" && \
+        ./"${KREW}" install krew oidc-login \
+    ) \
+    && echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> /root/.bashrc \
+    && rm -rf /root/.krew/index
+
+RUN mkdir /root/.kube
+
+WORKDIR /root
+
+ENV TAILSCALE_LOGIN_SERVER=https://tun.fabiv.pw
+
+CMD tailscaled --tun=userspace-networking \
+       --state=mem: >> /var/log/tailscaled 2>&1 & \
+    tailscale up --login-server ${TAILSCALE_LOGIN_SERVER} --accept-routes \
+    && bash
+
+LABEL org.opencontainers.image.title="Kubernetes Management Container" \
+      org.opencontainers.image.description="Alpine with tailscale and kubect plus some utils" \
+      org.opencontainers.image.authors="Frederic Borries <containers@fabiv.pw>"

@@ -25,6 +25,8 @@ WORKDIR /root
 
 ENV TAILSCALE_LOGIN_SERVER=https://tun.fabiv.pw
 
+# diff
+
 CMD tailscaled --tun=userspace-networking \
        --state=mem: >> /var/log/tailscaled 2>&1 & \
     tailscale up --login-server ${TAILSCALE_LOGIN_SERVER} --accept-routes \

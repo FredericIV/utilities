@@ -20,7 +20,7 @@ jobs:
 
     - name: set-matrix
       run: |
-        /usr/bin/env python -c 'import os
+        python3 -c 'import os
         import json
         def find_all(name, path):
             result = []

@@ -51,7 +51,10 @@ jobs:
       run: |
         apt-get update
         apt-get -y install buildah
-
+    - run: |
+        echo "Image: utilities/${{ matrix.name }}"
+    - run: |
+        echo "Containerfile: ${{ matrix.path }}"
     - name: Build
       uses: https://github.com/redhat-actions/buildah-build@v2
       with:

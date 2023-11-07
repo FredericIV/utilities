@@ -1,76 +1,62 @@
 name: build-push-containers
 
-on: [push]
-#on:
-#  push:
-#    paths:
-#      - '**/Containerfile'
-#      - '**/Dockerfile'
+on:
+  push:
+    paths:
+      - '**/Containerfile'
+      - '**/Dockerfile'
 
 jobs:
   id-containers:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      branch: ${{ steps.extract-branch.outputs.branch }}
     steps:
     - uses: actions/checkout@v3
       with:
-        ssh-key: ${{ secrets.SSH_KEY }}
+	      ssh-key: ${{ secrets.SSH_KEY }}
         ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
 
-    - name: set-matrix
+    - name: Find container files
+      id: set-matrix
       run: |
-        python3 -c 'import os
+	      python3 -c 'import os
         import json
         def find_all(name, path):
             result = []
             for root, dirs, files in os.walk(path):
                 if name in files:
-                    result.append({"path":os.path.join(root, name),"name":os.path.basename(root)})
+                    result.append({"context":root, "containerfile": name, "name":os.path.basename(root)})
             return result
         print("matrix="+json.dumps(find_all("Containerfile",".")))' >> $GITHUB_OUTPUT
 
-    - name: extract-branch
-      shell: bash
-      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-
-
   build-push-containers:
-    needs: id-containers
+    needs:
+      - id-containers
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        include: ${{fromJson(needs.id-containers.outputs.matrix)}}
+      	include: ${{fromJson(needs.id-containers.outputs.matrix)}}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        ssh-key: ${{ secrets.SSH_KEY }}
+      	ssh-key: ${{ secrets.SSH_KEY }}
         ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
 
-    - name: Install buildah
+    - name: Kaniko args
       run: |
-        apt-get update
-        apt-get -y install buildah
-    - name: Buildah args
-      run: |
-        echo "Image: utilities/${{ matrix.name }}"
-        echo "Tags: ${{ github.sha }} ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
-        echo "Containerfile: ${{ matrix.path }}"
-    - name: Build
-      uses: https://github.com/redhat-actions/buildah-build@v2
-      with:
-        image: utilities/${{ matrix.name }}
-        tags: ${{ github.sha }}
-        containerfiles: |
-          ${{ matrix.path }}
+      	echo "Image: utilities/${{ matrix.name }}"
+        echo "Tags: ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        echo "Context: ${{ matrix.context }}"
+        echo "Containerfiles: ${{ matrix.containerfile }}"
 
-    - name: Push
-      uses: https://github.com/redhat-actions/push-to-registry@v2
+    - name: Kaniko build
+      uses: aevea/action-kaniko@master
       with:
-        image: ${{ steps.build.outputs.image }}
-        tags: ${{ steps.build.outputs.tags }} ${{ needs.id-containers.outputs.branch }}
-        registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
+      	image: utilities/${{ matrix.name }}
         username: ${{ secrets.GITEA_USERNAME }}
         password: ${{ secrets.GITEA_TOKEN }}
+        build_file: ${{ matrix.containerfile }}
+        path: ${{ matrix.context }}
+        registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}

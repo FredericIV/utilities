@@ -1,10 +1,11 @@
 name: build-push-containers
 
-on:
-  push:
-    paths:
-      - '**/Containerfile'
-      - '**/Dockerfile'
+on: [push]
+#on:
+#  push:
+#    paths:
+#      - '**/Containerfile'
+#      - '**/Dockerfile'
 
 jobs:
   id-containers:
@@ -14,9 +15,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        token: ${{ secrets.GITEA_TOKEN }}
+        ssh-key: ${{ secrets.GITEA_SSH_KEY }}
+        ssh-known-hosts: gitea ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFsWk3flC6zjhmI0nYCrg2iOQ8fCKUycaR1r2mPw6DCON1DmnwSa8Zk2Xfgj6ko7B1YG3xgkoncDbj6C7AtKp70=
 
-    - id: set-matrix
+    - name: set-matrix
       run: |
         python -c 'import os
         import json
@@ -38,9 +40,10 @@ jobs:
     strategy:
       matrix: ${{fromJson(needs.id-containers.outputs.matrix)}}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITEA_TOKEN }}
+    - uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.GITEA_SSH_KEY }}
+        ssh-known-hosts: gitea ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFsWk3flC6zjhmI0nYCrg2iOQ8fCKUycaR1r2mPw6DCON1DmnwSa8Zk2Xfgj6ko7B1YG3xgkoncDbj6C7AtKp70=
 
       - name: build
         uses: https://github.com/redhat-actions/buildah-build@v2

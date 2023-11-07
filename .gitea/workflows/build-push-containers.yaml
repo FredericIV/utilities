@@ -14,9 +14,9 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.GITEA_SSH_KEY }}
-        ssh-known-hosts: gitea ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFsWk3flC6zjhmI0nYCrg2iOQ8fCKUycaR1r2mPw6DCON1DmnwSa8Zk2Xfgj6ko7B1YG3xgkoncDbj6C7AtKp70=
+        with:
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
 
     - name: set-matrix
       run: |
@@ -42,9 +42,9 @@ jobs:
       matrix: ${{fromJson(needs.id-containers.outputs.matrix)}}
     steps:
     - uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.GITEA_SSH_KEY }}
-        ssh-known-hosts: gitea ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFsWk3flC6zjhmI0nYCrg2iOQ8fCKUycaR1r2mPw6DCON1DmnwSa8Zk2Xfgj6ko7B1YG3xgkoncDbj6C7AtKp70=
+        with:
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
 
     - name: build
       uses: https://github.com/redhat-actions/buildah-build@v2

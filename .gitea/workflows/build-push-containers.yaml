@@ -29,7 +29,7 @@ jobs:
                 if name in files:
                     result.append({"path":os.path.join(root, name),"name":os.path.basename(root)})
             return result
-        print("matrix="json.dumps(find_all("Containerfile",".")))' >> $GITHUB_OUTPUT
+        print("matrix="+json.dumps(find_all("Containerfile",".")))' >> $GITHUB_OUTPUT
 
     - name: extract-branch
       shell: bash

@@ -2,8 +2,6 @@ name: build-push-containers
 
 on:
   push:
-    branches:
-      - 'main'
     paths:
       - '**/Containerfile'
       - '**/Dockerfile'
@@ -30,6 +28,11 @@ jobs:
             return result
         print("matrix={\"include\":"+json.dumps(find_all("Containerfile","."))+"}")' >> $GITHUB_OUTPUT
 
+    - name: extract-branch
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+
+
   build-push-containers:
     runs-on: ubuntu-latest
     strategy:
@@ -51,7 +54,7 @@ jobs:
         uses: https://github.com/redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build.outputs.image }}
-          tags: ${{ steps.build.outputs.tags }}
+          tags: ${{ steps.build.outputs.tags }} ${{ needs.id-containers.outputs.branch }}
           registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
           username: ${{ secrets.GITEA_USERNAME }}
           password: ${{ secrets.GITEA_TOKEN }}

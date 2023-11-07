@@ -36,6 +36,7 @@ jobs:
 
 
   build-push-containers:
+    needs: id-containers
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.id-containers.outputs.matrix)}}

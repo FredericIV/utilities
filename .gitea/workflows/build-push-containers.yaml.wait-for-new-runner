@@ -1,0 +1,62 @@
+name: build-push-containers
+
+on:
+  push:
+    paths:
+      - '**/Containerfile'
+      - '**/Dockerfile'
+
+jobs:
+  id-containers:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.SSH_KEY }}
+        ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
+
+    - name: Find container files
+      id: set-matrix
+      run: |
+        python3 -c 'import os
+        import json
+        def find_all(name, path):
+            result = []
+            for root, dirs, files in os.walk(path):
+                if name in files:
+                    result.append({"context":root, "containerfile": name, "name":os.path.basename(root)})
+            return result
+        print("matrix="+json.dumps(find_all("Containerfile",".")))' >> $GITHUB_OUTPUT
+
+  build-push-containers:
+    needs:
+      - id-containers
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        include: ${{fromJson(needs.id-containers.outputs.matrix)}}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.SSH_KEY }}
+        ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
+
+    - name: Kaniko args
+      run: |
+        echo "Image: utilities/${{ matrix.name }}"
+        echo "Tags: ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        echo "Context: ${{ matrix.context }}"
+        echo "Containerfiles: ${{ matrix.containerfile }}"
+
+    - name: Kaniko build
+      uses: aevea/action-kaniko@master
+      with:
+        image: utilities/${{ matrix.name }}
+        username: ${{ secrets.GITEA_USERNAME }}
+        password: ${{ secrets.GITEA_TOKEN }}
+        build_file: ${{ matrix.containerfile }}
+        path: ${{ matrix.context }}
+        registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}

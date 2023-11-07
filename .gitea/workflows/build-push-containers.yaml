@@ -7,36 +7,8 @@ on:
       - '**/Dockerfile'
 
 jobs:
-  id-containers:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.SSH_KEY }}
-        ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
-
-    - name: Find container files
-      id: set-matrix
-      run: |
-        python3 -c 'import os
-        import json
-        def find_all(name, path):
-            result = []
-            for root, dirs, files in os.walk(path):
-                if name in files:
-                    result.append({"context":root, "containerfile": name, "name":os.path.basename(root)})
-            return result
-        print("matrix="+json.dumps(find_all("Containerfile",".")))' >> $GITHUB_OUTPUT
-
   build-push-containers:
-    needs:
-      - id-containers
     runs-on: ubuntu-latest
-    strategy:
-      matrix: 
-        include: ${{fromJson(needs.id-containers.outputs.matrix)}}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -44,19 +16,36 @@ jobs:
         ssh-key: ${{ secrets.SSH_KEY }}
         ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
 
-    - name: Kaniko args
+    - name: Kaniko args (graphviz-preview)
       run: |
-        echo "Image: utilities/${{ matrix.name }}"
+        echo "Image: utilities/graphviz-preview"
         echo "Tags: ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
-        echo "Context: ${{ matrix.context }}"
-        echo "Containerfiles: ${{ matrix.containerfile }}"
+        echo "Context: ./graphviz/graphviz-preview"
+        echo "Containerfiles: Containerfile"
 
-    - name: Kaniko build
+    - name: Kaniko build+push (graphviz-preview)
       uses: aevea/action-kaniko@master
       with:
-        image: utilities/${{ matrix.name }}
+        image: utilities/graphviz-preview
         username: ${{ secrets.GITEA_USERNAME }}
         password: ${{ secrets.GITEA_TOKEN }}
-        build_file: ${{ matrix.containerfile }}
-        path: ${{ matrix.context }}
+        build_file: Containerfile
+        path: ./graphviz/graphviz-preview
+        registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
+
+    - name: Kaniko args (k8s-mgmt)
+      run: |
+        echo "Image: utilities/k8s-mgmt"
+        echo "Tags: ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        echo "Context: ./dev-env/k8s-mgmt"
+        echo "Containerfiles: Containerfile"
+
+    - name: Kaniko build+push (k8s-mgmt)
+      uses: aevea/action-kaniko@master
+      with:
+        image: utilities/k8s-mgmt
+        username: ${{ secrets.GITEA_USERNAME }}
+        password: ${{ secrets.GITEA_TOKEN }}
+        build_file: Containerfile
+        path: ./dev-env/k8s-mgmt
         registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}

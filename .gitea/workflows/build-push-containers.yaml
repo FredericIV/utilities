@@ -41,12 +41,18 @@ jobs:
     strategy:
       matrix: ${{fromJson(needs.id-containers.outputs.matrix)}}
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
       with:
         ssh-key: ${{ secrets.SSH_KEY }}
         ssh-known-hosts: gitea ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOczZNenNJm/4I4ofFjpKKd+7Y+Wmqwjaw9bZl3qFs8k
 
-    - name: build
+    - name: Install buildah
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install buildah
+
+    - name: Build
       uses: https://github.com/redhat-actions/buildah-build@v2
       with:
         image: utilities/${{ matrix.name }}
@@ -54,7 +60,7 @@ jobs:
         containerfiles: |
           ${{ matrix.path }}
 
-    - name: push
+    - name: Push
       uses: https://github.com/redhat-actions/push-to-registry@v2
       with:
         image: ${{ steps.build.outputs.image }}

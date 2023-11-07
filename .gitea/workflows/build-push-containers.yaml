@@ -56,7 +56,7 @@ jobs:
     - name: Buildah args
       run: |
         echo "Image: utilities/${{ matrix.name }}"
-        echo "Tags: ${{ github.sha }} ${{ GITHUB_REF_NAME }} ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        echo "Tags: ${{ github.sha }} ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
         echo "Containerfile: ${{ matrix.path }}"
     - name: Build
       uses: https://github.com/redhat-actions/buildah-build@v2

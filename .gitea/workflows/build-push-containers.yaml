@@ -45,19 +45,19 @@ jobs:
         ssh-key: ${{ secrets.GITEA_SSH_KEY }}
         ssh-known-hosts: gitea ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFsWk3flC6zjhmI0nYCrg2iOQ8fCKUycaR1r2mPw6DCON1DmnwSa8Zk2Xfgj6ko7B1YG3xgkoncDbj6C7AtKp70=
 
-      - name: build
-        uses: https://github.com/redhat-actions/buildah-build@v2
-        with:
-          image: utilities/${{ matrix.name }}
-          tags: ${{ github.sha }}
-          containerfiles: |
-            ${{ matrix.path }}
+    - name: build
+      uses: https://github.com/redhat-actions/buildah-build@v2
+      with:
+        image: utilities/${{ matrix.name }}
+        tags: ${{ github.sha }}
+        containerfiles: |
+          ${{ matrix.path }}
 
-      - name: push
-        uses: https://github.com/redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build.outputs.image }}
-          tags: ${{ steps.build.outputs.tags }} ${{ needs.id-containers.outputs.branch }}
-          registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
-          username: ${{ secrets.GITEA_USERNAME }}
-          password: ${{ secrets.GITEA_TOKEN }}
+    - name: push
+      uses: https://github.com/redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build.outputs.image }}
+        tags: ${{ steps.build.outputs.tags }} ${{ needs.id-containers.outputs.branch }}
+        registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
+        username: ${{ secrets.GITEA_USERNAME }}
+        password: ${{ secrets.GITEA_TOKEN }}

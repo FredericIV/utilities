@@ -40,7 +40,7 @@ jobs:
           token: ${{ secrets.GITEA_TOKEN }}
 
       - name: build
-        uses: redhat-actions/buildah-build@v2
+        uses: https://github.com/redhat-actions/buildah-build@v2
         with:
           image: utilities/${{ matrix.name }}
           tags: ${{ github.sha }}
@@ -48,7 +48,7 @@ jobs:
             ${{ matrix.path }}
 
       - name: push
-        uses: redhat-actions/push-to-registry@v2
+        uses: https://github.com/redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build.outputs.image }}
           tags: ${{ steps.build.outputs.tags }}

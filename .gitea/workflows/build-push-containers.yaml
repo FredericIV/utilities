@@ -31,7 +31,7 @@ jobs:
         password: ${{ secrets.GITEA_TOKEN }}
         build_file: Containerfile
         path: ./graphviz/graphviz-preview
-        registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
+        registry: "gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}""
 
     - name: Kaniko args (k8s-mgmt)
       run: |
@@ -48,4 +48,4 @@ jobs:
         password: ${{ secrets.GITEA_TOKEN }}
         build_file: Containerfile
         path: ./dev-env/k8s-mgmt
-        registry: gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}
+        registry: "gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}""

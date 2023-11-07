@@ -7,6 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt && apt update && apt install 
 
 COPY app.py .
 
+#trigger
+
 EXPOSE 8080/tcp
 ENV GRAPHVIZ_DATADIR=/data
 ENV GRAPHVIZ_HOST="0.0.0.0"

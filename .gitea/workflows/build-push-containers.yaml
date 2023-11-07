@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      branch: ${{ steps.extract-branch.outputs.branch }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -28,7 +29,7 @@ jobs:
                 if name in files:
                     result.append({"path":os.path.join(root, name),"name":os.path.basename(root)})
             return result
-        print("matrix={\"include\":"+json.dumps(find_all("Containerfile","."))+"}")' >> $GITHUB_OUTPUT
+        print("matrix="json.dumps(find_all("Containerfile",".")))' >> $GITHUB_OUTPUT
 
     - name: extract-branch
       shell: bash
@@ -39,7 +40,8 @@ jobs:
     needs: id-containers
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.id-containers.outputs.matrix)}}
+      matrix: 
+        include: ${{fromJson(needs.id-containers.outputs.matrix)}}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -51,9 +53,10 @@ jobs:
       run: |
         apt-get update
         apt-get -y install buildah
-    - run: |
+    - name: Buildah args
+      run: |
         echo "Image: utilities/${{ matrix.name }}"
-    - run: |
+        echo "Tags: ${{ github.sha }} ${{ GITHUB_REF_NAME }} ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
         echo "Containerfile: ${{ matrix.path }}"
     - name: Build
       uses: https://github.com/redhat-actions/buildah-build@v2

@@ -1,9 +1,6 @@
 name: build-push-containers
 
 on: push
-#    paths:
-#      - '**/Containerfile'
-#      - '**/Dockerfile'
 
 jobs:
   id-containers:

@@ -27,11 +27,11 @@ jobs:
       uses: aevea/action-kaniko@master
       with:
         image: utilities/graphviz-preview
-        username: ${{ secrets.GITEA_USERNAME }}
+        username: fborries
         password: ${{ secrets.GITEA_TOKEN }}
         build_file: Containerfile
         path: ./graphviz/graphviz-preview
-        registry: "gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}"
+        registry: "gitea.fabiv.pw/fborries"
 
     - name: Kaniko args (k8s-mgmt)
       run: |
@@ -44,8 +44,8 @@ jobs:
       uses: aevea/action-kaniko@master
       with:
         image: utilities/k8s-mgmt
-        username: ${{ secrets.GITEA_USERNAME }}
+        username: fborries
         password: ${{ secrets.GITEA_TOKEN }}
         build_file: Containerfile
         path: ./dev-env/k8s-mgmt
-        registry: "gitea.fabiv.pw/${{ secrets.GITEA_USERNAME }}"
+        registry: "gitea.fabiv.pw/fborries"

@@ -1,6 +1,10 @@
 name: build-push-containers
 
-on: push
+on:
+  push:
+    paths:
+      - '**/Containerfile'
+      - '**/Dockerfile'
 
 jobs:
   id-containers:
@@ -16,7 +20,7 @@ jobs:
     - name: Find container files
       id: set-matrix
       run: |
-	      python3 -c 'import os
+        python3 -c 'import os
         import json
         def find_all(name, path):
             result = []

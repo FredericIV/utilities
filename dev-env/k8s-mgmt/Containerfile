@@ -1,35 +1,62 @@
+LABEL org.opencontainers.image.title="Kubernetes Management Container" \
+      org.opencontainers.image.description="Alpine with kubectl plus some utils" \
+      org.opencontainers.image.authors="Frederic Borries <containers@fabiv.pw>"
+
 ARG ALPINE_VER=3.18
-FROM docker.io/alpine:${ALPINE_VER}
+ARG SERVICEMESH=base
+FROM docker.io/alpine:${ALPINE_VER} as base
 
 RUN echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories \
-    && apk --no-cache add nano wget git bash bash-completion curl tailscale@edge \
+    && apk --no-cache add nano wget git bash bash-completion curl tmux tini \
        kubectl@edge kubectl-bash-completion@edge  \
        helm@edge helm-bash-completion@edge \
        kustomize@edge kustomize-bash-completion@edge
 
-RUN ( \
-        set -x; cd "$(mktemp -d)" && \
-        OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
-        ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" && \
-        KREW="krew-${OS}_${ARCH}" && \
-        curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" && \
-        tar zxvf "${KREW}.tar.gz" && \
-        ./"${KREW}" install krew oidc-login \
-    ) \
-    && echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> /root/.bashrc \
-    && rm -rf /root/.krew/index
+RUN echo -e "if [ -f ~/.bashrc ]; then\n    . ~/.bashrc \nfi" >> /root/.bash_profile && \
+    echo -e "if [ -f /etc/bash/bashrc ]; then\n    . /etc/bash/bashrc\nfi\nif ! [[ \"\$PATH\" =~ \"\$HOME/.local/bin:\$HOME/bin:\" ]]; then\n    PATH=\"\$HOME/.local/bin:\$HOME/bin:\$PATH\"\nfi\nexport PATH\nif [ -d ~/.bashrc.d ]; then\n    for rc in ~/.bashrc.d/*; do\n        if [ -f \"\$rc\" ]; then\n            . \"\$rc\"\n        fi\n    done\nfi\nunset rc" >> /root/.bashrc && \
+    echo "set -g mouse on" >> /root/.tmux.conf && \
+    echo '#!/bin/sh' >> /usr/local/bin/tsup.sh && \
+    echo -e "apk --no-cache add tailscale@edge\ntailscaled --tun=userspace-networking --state=mem: >> /var/log/tailscaled 2>&1 &\ntailscale up $@" >> /usr/local/bin/tsup.sh
+
+RUN ( set -x; cd "$(mktemp -d)" && \
+    OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
+    ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" && \
+    KREW="krew-${OS}_${ARCH}" && \
+    curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" && \
+    tar zxvf "${KREW}.tar.gz" && \
+    ./"${KREW}" install krew oidc-login colorize-applied && \
+    echo export PATH=\"${KREW_ROOT:-$HOME/.krew}/bin:\$PATH\" >> /root/.bashrc && \
+    rm -rf /root/.krew/index )
 
 RUN mkdir /root/.kube
 
 WORKDIR /root
 
-ENV TAILSCALE_LOGIN_SERVER=https://tun.fabiv.pw
+ENTRYPOINT ["/sbin/tini", "--", "bash", "--login"]
 
-CMD tailscaled --tun=userspace-networking \
-       --state=mem: >> /var/log/tailscaled 2>&1 & \
-    tailscale up --login-server ${TAILSCALE_LOGIN_SERVER} --accept-routes \
-    && bash
+FROM base as istio
+RUN ( cd /opt && \
+    curl -L https://istio.io/downloadIstio | sh - && \
+    cd istio-* && \
+    echo export PATH=\"$(pwd)/bin:\$PATH\" >> /etc/profile.d/90-istio.sh && \
+    ./bin/istioctl completion bash > /usr/share/bash-completion/completions/istio )
 
-LABEL org.opencontainers.image.title="Kubernetes Management Container" \
-      org.opencontainers.image.description="Alpine with tailscale and kubect plus some utils" \
-      org.opencontainers.image.authors="Frederic Borries <containers@fabiv.pw>"
+FROM base as cilium
+RUN ( cd /usr/local/bin && \
+    curl -L https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz | gunzip | tar -xf - && \
+    chown root:root cilium && \
+    cilium completion bash > /usr/share/bash-completion/completions/cilium )
+
+FROM ${SERVICEMESH} as clusterctl
+RUN ( cd /usr/local/bin && \
+    curl -L https://github.com/kubernetes-sigs/cluster-api/releases/latest/download/clusterctl-linux-amd64 -o clusterctl && \
+    chown root:root clusterctl && \
+    chmod 755 clusterctl && \
+    clusterctl completion bash > /usr/share/bash-completion/completions/clusterctl )
+
+FROM clusterctl as talosctl
+RUN ( cd /usr/local/bin && \
+    curl -L https://github.com/siderolabs/talos/releases/latest/download/talosctl-linux-amd64 -o talosctl && \
+    chown root:root talosctl && \
+    chmod 755 talosctl && \
+    talosctl completion bash > /usr/share/bash-completion/completions/talosctl )

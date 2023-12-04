@@ -17,7 +17,6 @@ login:
 
 .PHONY: push
 push: login
-	echo $(TARGETLIST)
 	$(foreach target,$(CONTAINERLIST),$(shell podman image exists $(target) && podman push $(target)))
 
 .PHONY: base

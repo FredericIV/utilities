@@ -16,7 +16,8 @@ RUN echo -e "if [ -f ~/.bashrc ]; then\n    . ~/.bashrc \nfi" >> /root/.bash_pro
     echo -e "if [ -f /etc/bash/bashrc ]; then\n    . /etc/bash/bashrc\nfi\nif ! [[ \"\$PATH\" =~ \"\$HOME/.local/bin:\$HOME/bin:\" ]]; then\n    PATH=\"\$HOME/.local/bin:\$HOME/bin:\$PATH\"\nfi\nexport PATH\nif [ -d ~/.bashrc.d ]; then\n    for rc in ~/.bashrc.d/*; do\n        if [ -f \"\$rc\" ]; then\n            . \"\$rc\"\n        fi\n    done\nfi\nunset rc" >> /root/.bashrc && \
     echo "set -g mouse on" >> /root/.tmux.conf && \
     echo '#!/bin/sh' >> /usr/local/bin/tsup.sh && \
-    echo -e "apk --no-cache add tailscale@edge\ntailscaled --tun=userspace-networking --state=mem: >> /var/log/tailscaled 2>&1 &\ntailscale up $@" >> /usr/local/bin/tsup.sh
+    echo -e "apk --no-cache add tailscale@edge\ntailscaled --tun=userspace-networking --state=mem: >> /var/log/tailscaled 2>&1 &\ntailscale up $@" >> /usr/local/bin/tsup.sh && \
+    chmod 755 /usr/local/bin/tsup.sh
 
 RUN ( set -x; cd "$(mktemp -d)" && \
     OS="$(uname | tr '[:upper:]' '[:lower:]')" && \

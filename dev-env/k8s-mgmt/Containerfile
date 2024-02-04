@@ -2,7 +2,7 @@ LABEL org.opencontainers.image.title="Kubernetes Management Container" \
       org.opencontainers.image.description="Alpine with kubectl plus some utils" \
       org.opencontainers.image.authors="Frederic Borries <containers@fabiv.pw>"
 
-ARG ALPINE_VER=3.18
+ARG ALPINE_VER=3.19
 ARG SERVICEMESH=base
 FROM docker.io/alpine:${ALPINE_VER} as base
 

@@ -29,7 +29,7 @@ Which is equivalent to `python3 app.py A2`, the result of which is included as `
 
 ## Implementation details
 ### Code128C
-The formula outputs parts:
+The formula operates in four parts:
 1) Startcode C "Í"
 2) 1) Pad the number
    2) Break the number into two digit segments

@@ -22,3 +22,19 @@ options:
 Warning: LibreOffice Calc seems to support a maximum barcode length of 24 due to the formula exceeding 8192 tokens.
 
 Generally the field would look like `A2`, but it may also be a SharePoint column `[Barcode]`, an explicit value `200`, or a calculated value `A2+100000`. The latter is a convenient way to add a prefix.
+
+## Example
+`python3 app.py -t code128c -n 8 -p "0" -d left A2`
+Which is equivalent to `python3 app.py A2`, the result of which is included as `example.txt`. The output can be copied into a cell, which will convert the value in `A2` to the output necessary to be rendered as a barcode when in the LibreBarcode Code128 font, padding left with zeros. The cell can be expanded/dragged to neighbors as with a normal formula.
+
+## Implementation details
+### Code128C
+The formula outputs parts:
+1) Startcode C "Í"
+2) 1) Pad the number
+   2) Break the number into two digit segments
+   3) Break into <25, <50, <75, and <100. This gets around the max choose length in LibreOffice of 30. Choose is used for backwards compatibility instead of using switch.
+   4) Conduct lookup, e.g. 1 == !
+3) 1) [Calculate checksum](https://www.barcodefaq.com/1d/code-128/#CalculationExamples)
+   2) Conduct lookup (See 2.2 and 2.3)
+4) Stopcode "Î"

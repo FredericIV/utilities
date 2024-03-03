@@ -14,17 +14,17 @@ symbologyLookup['code128c']='''"00","Â","01","!","02",CHAR(34),"03","#","04","$
 
 
 def choose(stringar:list, ifer:str) -> str:
-  retval = " CHOOSE("+ifer+"+1,"
+  retval = "CHOOSE("+ifer+"+1,"
   for i in range(1, len(stringar), 2):
     retval = retval + stringar[i]
     retval = retval + (',' if i!=(len(stringar)-1) else ')')
   return retval
 
 def broken(stringar:list, ifer:str) -> str:
-  return 'IF(VALUE(' + ifer + ')<50, IF(VALUE(' + ifer + ')<25,' + choose(stringar[:50], ifer='VALUE('+ifer+')') + ',' + choose(stringar[50:100], ifer='VALUE('+ifer+')-25') + '),IF(VALUE(' + ifer + ')<75,' + choose(stringar[100:150], ifer='VALUE('+ifer+')-50') + ',' + choose(stringar[150:200], ifer='VALUE('+ifer+')-75') + '))'
+  return 'IF(VALUE(' + ifer + ')<50,IF(VALUE(' + ifer + ')<25,' + choose(stringar[:50], ifer='VALUE('+ifer+')') + ',' + choose(stringar[50:100], ifer='VALUE('+ifer+')-25') + '),IF(VALUE(' + ifer + ')<75,' + choose(stringar[100:150], ifer='VALUE('+ifer+')-50') + ',' + choose(stringar[150:200], ifer='VALUE('+ifer+')-75') + '))'
 
 def modgen(numchars:int, field:str) -> str:
-  retval = " MOD(105+"
+  retval = "MOD(105+"
   for i in range(1, int(numchars/2)+1):
     retval = retval + "MID("+field+","+str(i+i-1)+",2)"+"*"+str(i)
     retval = retval + ('+' if i!=int(numchars/2) else ', 103)')

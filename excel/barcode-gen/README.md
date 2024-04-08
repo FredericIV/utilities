@@ -40,4 +40,4 @@ The formula operates in four parts:
 4) Stopcode "Î"
 
 ## Special note for SharePoint
-Due to internal limits of 2019 and 365 editions of Sharepoint, the formula needs to be split in half. An example is in example-sharepoint.txt using the fields `Barcode` for the string to convert, `BarcodeCalcA` for the first half, `BarcodeCalcB` for the second half, and `BarcodePrint` for the result.
+Due to internal limits of 2019 and 365 editions of Sharepoint, the formula needs to be split into pieces depending on the number of barcode characters. An example with eight characters is in example-sharepoint.txt using the fields `Barcode` for the string to convert, `BarcodeCalcA` for the first half, `BarcodeCalcB` for the second half, and `BarcodePrint` for the result.

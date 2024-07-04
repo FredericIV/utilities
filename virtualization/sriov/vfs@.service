@@ -1,0 +1,11 @@
+[Unit]
+Description=Configure nic %I to have 8 virtual functions
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/sh -c "echo 8 > /sys/class/net/%i/device/sriov_numvfs"
+ExecStop=/usr/bin/sh -c "echo 0 > /sys/class/net/%i/device/sriov_numvfs"
+
+[Install]
+WantedBy=network.target

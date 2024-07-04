@@ -12,3 +12,5 @@ Quick and dirty script to list the hostnames of live hosts in a tailnet.
 
 ## Excel-BarcodeGen
 Generate barcodes in Excel or LibreOffice Calc using a single cell.
+## Virtualization
+Tools/scripts/configs to assist with running in a virtualization environment.

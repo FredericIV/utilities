@@ -17,7 +17,7 @@ login:
 
 .PHONY: push
 push: login
-	$(foreach target,$(CONTAINERLIST),$(shell podman image exists $(target) && podman push $(target)))
+	$(foreach target,$(CONTAINERLIST),$(shell $(ENGINE) image exists $(target) && $(ENGINE) push $(target)))
 
 .PHONY: base
 base:

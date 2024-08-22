@@ -1,0 +1,23 @@
+resources:
+- name: registry
+  type: docker-image
+  source:
+    repository: gitea.fabiv.pw/fborries/utilities/graphviz-preview
+    username: ((fborries-gitea.username))
+    password: ((fborries-gitea.password))
+- name: repo
+  type: git
+  source:
+    uri: https://gitea.fabiv.pw/fborries/utilities.git
+    username: ((fborries-gitea.username))
+    password: ((fborries-gitea.password))
+jobs:
+- name: build-push-container
+  plan:
+  - get: repo
+    trigger: true
+  - put: registry
+    params:
+      build: repo/graphviz/graphviz-preview
+      dockerfile: repo/graphviz/graphviz-preview/Containerfile
+      docker_buildkit: 1

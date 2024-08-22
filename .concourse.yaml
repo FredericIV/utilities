@@ -1,0 +1,45 @@
+resources:
+- name: repo
+  type: git
+  source:
+    uri: https://gitea.fabiv.pw/fborries/utilities.git
+    username: ((fborries-gitea.username))
+    password: ((fborries-gitea.password))
+
+jobs:
+- name: generate-pipelines
+  plan:
+  - get: repo
+    trigger: true
+  - task: find-pipelines
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: debian
+          tag: latest
+      outputs: 
+      - name: "pipelines"
+      inputs: 
+      - name: "repo"
+      run:
+        path: find
+        args:
+        - "./repo"
+        - "-iwholename"
+        - "./.concourse.yaml"
+        - "-prune"
+        - "-o"
+        - "-iname"
+        - ".concourse.yaml"
+        - "-fprintf"
+        - "pipelines/pipelines.yaml"
+        - '"- \042%P\042\n"'
+  - load_var: pipelinelist
+    file: pipelines/pipelines.yaml
+  - across:
+    - var: pipeline
+      values: ((.:pipelinelist))
+    set_pipeline: ((.:pipeline))
+    file: repo/((.:pipeline))

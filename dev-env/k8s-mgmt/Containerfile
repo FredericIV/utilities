@@ -1,10 +1,6 @@
-LABEL org.opencontainers.image.title="Kubernetes Management Container" \
-      org.opencontainers.image.description="Alpine with kubectl plus some utils" \
-      org.opencontainers.image.authors="Frederic Borries <containers@fabiv.pw>"
-
-ARG ALPINE_VER=3.19
+FROM docker.io/alpine:${ALPINE_VER:-3.20} as base
+ARG ALPINE_VER=3.20
 ARG SERVICEMESH=base
-FROM docker.io/alpine:${ALPINE_VER} as base
 
 RUN echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories \
     && apk --no-cache add nano wget git bash bash-completion curl tmux tini \
@@ -34,6 +30,10 @@ RUN mkdir /root/.kube
 WORKDIR /root
 
 ENTRYPOINT ["/sbin/tini", "--", "bash", "--login"]
+
+LABEL org.opencontainers.image.title="Kubernetes Management Container" \
+      org.opencontainers.image.description="Alpine with kubectl plus some utils" \
+      org.opencontainers.image.authors="Frederic Borries <containers@fabiv.pw>"
 
 FROM base as istio
 RUN ( cd /opt && \

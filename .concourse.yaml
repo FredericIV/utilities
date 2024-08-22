@@ -20,26 +20,24 @@ jobs:
           repository: debian
           tag: latest
       outputs: 
-      - name: "pipelines"
+      - name: "pipeyaml"
       inputs: 
       - name: "repo"
       run:
-        path: find
+        path: sh
         args:
-        - "./repo"
-        - "-iwholename"
-        - "./.concourse.yaml"
-        - "-prune"
-        - "-o"
-        - "-iname"
-        - ".concourse.yaml"
-        - "-fprintf"
-        - "pipelines/pipelines.yaml"
-        - '"- \042%P\042\n"'
+        - "-exc"
+        - |
+          cd repo
+          find . -iwholename ./.concourse.yaml -prune -o -iname .concourse.yaml \
+            -printf '- {"name":"%h","value":"%P"}\n' \
+          | sed 's/\"\.\//\"/' \
+          | awk -F'"' -v OFS='"' '{sub("/", ".", $4)}{ print $0}' \
+          > ../pipeyaml/pipelines.yaml
   - load_var: pipelinelist
-    file: pipelines/pipelines.yaml
+    file: pipeyaml/pipelines.yaml
   - across:
     - var: pipeline
       values: ((.:pipelinelist))
-    set_pipeline: ((.:pipeline))
-    file: repo/((.:pipeline))
+    set_pipeline: utilities.((.:pipeline.name))
+    file: repo/((.:pipeline.value))

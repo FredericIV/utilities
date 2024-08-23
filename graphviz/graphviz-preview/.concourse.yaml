@@ -1,10 +1,19 @@
 resources:
-- name: registry
-  type: docker-image
+- name: container.graphviz-preview
+  type: registry-image
+  icon: docker
+  check_every: never
   source:
     repository: gitea.fabiv.pw/fborries/utilities/graphviz-preview
     username: ((fborries-gitea.username))
     password: ((fborries-gitea.password))
+- name: container.python
+  type: registry-image
+  icon: docker
+  check_every: 6h
+  source:
+    tag: slim
+    repository: docker.io/library/python
 - name: repo
   type: git
   source:
@@ -14,10 +23,37 @@ resources:
 jobs:
 - name: build-push-container
   plan:
+  - get: container.python
+    trigger: true
+    skip_download: true
   - get: repo
     trigger: true
-  - put: registry
+  - task: build-graphviz-preview
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: gcr.io/kaniko-project/executor
+            tag: debug
+        run:
+          path: sh
+          args:
+          - "-exc"
+          - |
+            sed 's/\:[0-9]*/\:1/' /etc/resolv.conf > /kaniko/resolv.conf
+            cat /kaniko/resolv.conf > /etc/resolv.conf
+            rm /kaniko/resolv.conf
+            /kaniko/executor \
+            --dockerfile=repo/graphviz/graphviz-preview/Containerfile \
+            --context=dir://repo/graphviz/graphviz-preview \
+            --tar-path=build-graphviz-preview/image.tar \
+            --destination=gitea.fabiv.pw/fborries/utilities/graphviz-preview:latest \
+            --no-push --reproducible
+        inputs: [{"name":"repo"}]
+        outputs: [{"name":"build-graphviz-preview"}]
+  - put: container.graphviz-preview
+    inputs: detect
     params:
-      build: repo/graphviz/graphviz-preview
-      dockerfile: repo/graphviz/graphviz-preview/Containerfile
-      docker_buildkit: 1
+      image: build-graphviz-preview/image.tar

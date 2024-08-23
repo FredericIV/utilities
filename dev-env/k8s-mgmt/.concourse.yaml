@@ -1,0 +1,187 @@
+resource_types:
+- name: registry-image-custom
+  type: registry-image
+  check_every: 24h
+  source:
+    repository: concourse/registry-image-resource
+  defaults:
+    password: ((fborries-gitea.password))
+    repository: gitea.fabiv.pw/fborries/utilities/k8s-mgmt
+    username: ((fborries-gitea.username))
+
+
+resources:
+- &ric
+  name: base
+  type: registry-image-custom
+  icon: docker
+  check_every: never
+  source:
+    tag: base
+- <<: *ric
+  name: istio
+  source:
+    tag: istio
+- <<: *ric
+  name: talosctl
+  source:
+    tag: talosctl
+- <<: *ric
+  name: cilium
+  source:
+    tag: cilium
+- <<: *ric
+  name: clusterctl
+  source:
+    tag: clusterctl
+- <<: *ric
+  name: istio-talosctl
+  source:
+    tag: istio-talosctl
+- <<: *ric
+  name: istio-clusterctl
+  source:
+    tag: istio-clusterctl
+- <<: *ric
+  name: cilium-talosctl
+  source:
+    tag: cilium-talosctl
+- <<: *ric
+  name: cilium-clusterctl
+  source:
+    tag: cilium-clusterctl
+- name: repo
+  type: git
+  icon: git
+  source:
+    uri: https://gitea.fabiv.pw/fborries/utilities.git
+
+jobs:
+- name: build-push-container
+  plan:
+  - get: repo
+    trigger: true
+  - in_parallel:
+      limit: 2
+      steps:
+      - do:
+        - task: build-base-base
+          privileged: true
+          config: &btc
+            platform: linux
+            image_resource:
+              type: registry-image
+              source:
+                repository: gcr.io/kaniko-project/executor
+                tag: debug
+            run:
+              path: sh
+              args:
+              - "-exc"
+              - |
+                sed 's/\:[0-9]*/\:1/' /etc/resolv.conf > /kaniko/resolv.conf
+                cat /kaniko/resolv.conf > /etc/resolv.conf
+                rm /kaniko/resolv.conf
+                /kaniko/executor \
+                --dockerfile=repo/dev-env/k8s-mgmt/Containerfile \
+                --context=dir://repo/dev-env/k8s-mgmt \
+                --tar-path=${mesh}-${operator}/image.tar \
+                --destination=gitea.fabiv.pw/fborries/utilities/k8s-mgmt:${mesh}-${operator} \
+                --build-arg=SERVICEMESH=${mesh} \
+                --target=${operator} --no-push --reproducible
+            inputs: [{"name":"repo"}]
+            params: {"mesh": "base","operator": "base"}
+            outputs: [{"name":"base-base"}]
+        - put: base
+          inputs: detect
+          params:
+            image: base-base/image.tar
+      - do:
+        - task: build-base-istio
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "base","operator": "istio"}
+            outputs: [{"name":"base-istio"}]
+        - put: istio
+          inputs: detect
+          params:
+            image: base-istio/image.tar
+      - do:
+        - task: build-base-cilium
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "base","operator": "cilium"}
+            outputs: [{"name":"base-cilium"}]
+        - put: cilium
+          inputs: detect
+          params:
+            image: base-cilium/image.tar
+      - do:
+        - task: build-base-clusterctl
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "base","operator": "clusterctl"}
+            outputs: [{"name":"base-clusterctl"}]
+        - put: clusterctl
+          inputs: detect
+          params:
+            image: base-clusterctl/image.tar
+      - do:
+        - task: build-base-talosctl
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "base","operator": "talosctl"}
+            outputs: [{"name":"base-talosctl"}]
+        - put: talosctl
+          inputs: detect
+          params:
+            image: base-talosctl/image.tar
+      - do:
+        - task: build-istio-clusterctl
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "istio","operator": "clusterctl"}
+            outputs: [{"name":"istio-clusterctl"}]
+        - put: istio-clusterctl
+          inputs: detect
+          params:
+            image: istio-clusterctl/image.tar
+      - do:
+        - task: build-istio-talosctl
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "istio","operator": "talosctl"}
+            outputs: [{"name":"istio-talosctl"}]
+        - put: istio-talosctl
+          inputs: detect
+          params:
+            image: istio-talosctl/image.tar
+      - do:
+        - task: build-cilium-clusterctl
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "cilium","operator": "clusterctl"}
+            outputs: [{"name":"cilium-clusterctl"}]
+        - put: cilium-clusterctl
+          inputs: detect
+          params:
+            image: cilium-clusterctl/image.tar
+      - do:
+        - task: build-cilium-talosctl
+          privileged: true
+          config: 
+            <<: *btc
+            params: {"mesh": "cilium","operator": "talosctl"}
+            outputs: [{"name":"cilium-talosctl"}]
+        - put: cilium-talosctl
+          inputs: detect
+          params:
+            image: cilium-talosctl/image.tar
+

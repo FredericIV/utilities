@@ -3,8 +3,6 @@ resources:
   type: git
   source:
     uri: https://gitea.fabiv.pw/fborries/utilities.git
-    username: ((fborries-gitea.username))
-    password: ((fborries-gitea.password))
 
 jobs:
 - name: generate-pipelines

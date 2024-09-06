@@ -58,4 +58,5 @@ jobs:
   - put: container.graphviz-preview
     inputs: detect
     params:
+      skip_download: true
       image: build-graphviz-preview/image.tar

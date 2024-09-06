@@ -94,6 +94,7 @@ jobs:
             outputs: [{"name":"base-base"}]
         - put: base
           inputs: detect
+          no_get: true
           params:
             image: base-base/image.tar
       - do:
@@ -105,6 +106,7 @@ jobs:
             outputs: [{"name":"base-istio"}]
         - put: istio
           inputs: detect
+          no_get: true
           params:
             image: base-istio/image.tar
       - do:
@@ -116,6 +118,7 @@ jobs:
             outputs: [{"name":"base-cilium"}]
         - put: cilium
           inputs: detect
+          no_get: true
           params:
             image: base-cilium/image.tar
       - do:
@@ -127,6 +130,7 @@ jobs:
             outputs: [{"name":"base-clusterctl"}]
         - put: clusterctl
           inputs: detect
+          no_get: true
           params:
             image: base-clusterctl/image.tar
       - do:
@@ -138,6 +142,7 @@ jobs:
             outputs: [{"name":"base-talosctl"}]
         - put: talosctl
           inputs: detect
+          no_get: true
           params:
             image: base-talosctl/image.tar
       - do:
@@ -149,6 +154,7 @@ jobs:
             outputs: [{"name":"istio-clusterctl"}]
         - put: istio-clusterctl
           inputs: detect
+          no_get: true
           params:
             image: istio-clusterctl/image.tar
       - do:
@@ -160,6 +166,7 @@ jobs:
             outputs: [{"name":"istio-talosctl"}]
         - put: istio-talosctl
           inputs: detect
+          no_get: true
           params:
             image: istio-talosctl/image.tar
       - do:
@@ -171,6 +178,7 @@ jobs:
             outputs: [{"name":"cilium-clusterctl"}]
         - put: cilium-clusterctl
           inputs: detect
+          no_get: true
           params:
             image: cilium-clusterctl/image.tar
       - do:
@@ -182,6 +190,7 @@ jobs:
             outputs: [{"name":"cilium-talosctl"}]
         - put: cilium-talosctl
           inputs: detect
+          no_get: true
           params:
             image: cilium-talosctl/image.tar
 
